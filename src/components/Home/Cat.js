@@ -4,18 +4,11 @@ import axios from "axios";
 export default function Cat() {
   const backendUrl = "http://localhost:8080/api/cats";
   const catsApiUrl = "https://cataas.com/cat";
-  //tag
-  //"https://cataas.com/cat/cute";
-  //text
-  //https://cataas.com/cat/says/hello
-  //wh
-  //https://cataas.com/cat?width=500&height=500
 
   let anchor = document.createElement("a");
   const [cats, setCats] = useState([]);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
   const [query, setQuery] = useState({
     tag: null,
     txt: null,
@@ -24,7 +17,7 @@ export default function Cat() {
   });
 
   useEffect(() => {
-    //loadCats();
+    loadCats();
   }, []);
 
   const onInputChange = (e) => {
@@ -42,42 +35,33 @@ export default function Cat() {
 
   const downloadFile = (result, name) => {
     let blobby = result.data;
+    var file = new File([blobby], name);
     let objectUrl = window.URL.createObjectURL(blobby);
     anchor.href = objectUrl;
     anchor.download = name;
     anchor.click();
     window.URL.revokeObjectURL(objectUrl);
+    uploadFile(file);
   };
 
-  const onFileChange = (e) => {
-    clearMessage();
-    setSelectedFile(e.target.files[0]);
-  };
+
 
   const clearMessage = () => {
     setError(null);
     setSuccess(null);
   };
 
-  const uploadFile = async () => {
+  const uploadFile = async (file) => {
     clearMessage();
     const formData = new FormData();
-    formData.append("file", selectedFile);
-    if (selectedFile != null) {
-      try {
-        const result = await axios.post(backendUrl, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-        if (result.data) setSuccess(result.data);
-        loadCats();
-      } catch (err) {
-        if (err.response != null) setError(err.response.data);
-        else setError(err.message);
-      }
-    } else {
-      setError("Please select the file you want to upload!");
+    formData.append("file", file);
+    if (file != null) {
+      const result = await axios.post(backendUrl, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      loadCats();
     }
   };
 
@@ -117,7 +101,7 @@ export default function Cat() {
 
   const onSubmitWH = async (e) => {
     clearMessage();
-    e.preventDefault(); 
+    e.preventDefault();
     if (query.h == null && query.w == null) {
       setError("Width and height cannot be allowed to be empty!");
     } else {
@@ -153,26 +137,8 @@ export default function Cat() {
           ) : (
             ""
           )}
+         
 
-          {/* <form className="row g-2 mb-3">
-            <div className="col-auto">
-              <input
-                className="form-control"
-                type="file"
-                id="formFile"
-                onChange={(e) => onFileChange(e)}
-              />
-            </div>
-            <div className="col-auto">
-              <button
-                type="button"
-                className="btn btn-outline-primary"
-                onClick={() => uploadFile()}
-              >
-                Upload
-              </button>
-            </div>
-          </form> */}
           <form className="row g-2 mb-3" onSubmit={onSubmitTag}>
             <div className="form-group row mt-3">
               <label htmlFor="tag" className="col-auto col-form-label">
@@ -259,7 +225,6 @@ export default function Cat() {
                 <th scope="col">Name</th>
                 <th scope="col">Path</th>
                 <th scope="col">Size</th>
-                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -267,23 +232,8 @@ export default function Cat() {
                 <tr>
                   <th scope="row">{cat.id}</th>
                   <td>{cat.name}</td>
-                  <td>{cat.type}</td>
+                  <td>{cat.path}</td>
                   <td>{cat.size}B</td>
-                  <td>
-                    <button
-                      className="btn btn-outline-success"
-                      onClick={() => downloadFile(cat.code, cat.name)}
-                    >
-                      Download
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-outline-danger mx-2"
-                      //   onClick={() => (cat.code)}
-                    >
-                      Delete
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
